@@ -1,0 +1,2 @@
+MLPTTS filter=lfs diff=lfs merge=lfs -text
+hifimodel_config_v1 filter=lfs diff=lfs merge=lfs -text
