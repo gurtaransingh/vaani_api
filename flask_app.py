@@ -1,4 +1,6 @@
 import os
+from flask import Flask, request, jsonify, send_file
+
 from tqdm.notebook import tqdm
 from IPython.display import clear_output
 from os.path import exists, join, basename, splitext
@@ -15,6 +17,7 @@ sys.path.append(project_name)
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 logging.getLogger('numba').setLevel(logging.WARNING)
 logging.getLogger('librosa').setLevel(logging.WARNING)
+app = Flask(__name__)
 
 # Check if Initialized
 try:
@@ -188,8 +191,9 @@ except NameError:
                     sr_mix = sr_mix / normalize
                     output_file = '3.wav'
                     sf.write(output_file, sr_mix.astype(np.int16), h2.sampling_rate)
+                    return output_file
 
-                    print("")
+                    
                    
     from IPython.display import clear_output
     clear_output()
@@ -204,20 +208,27 @@ stop_threshold = 0.5 #@param {type:"number"}
 model.decoder.gate_threshold = stop_threshold
 superres_strength = 1 #@param {type:"number"}
 
-print(f"Current Config:\npronounciation_dictionary: {pronounciation_dictionary}\nmax_duration (in seconds): {max_duration}\nstop_threshold: {stop_threshold}\nsuperres_strength: {superres_strength}\n\n")
 
-time.sleep(1)
-print("Enter/Paste your text.")
-contents = []
-while True:
+
+@app.route('/synthesize', methods=['POST'])
+
+
+@app.route('/synthesize', methods=['POST'])
+def synthesize():
+    text = request.json.get('text', '')
+    if not text:
+        app.logger.error('No text provided')
+        return jsonify({'error': 'No text provided'}), 400
+
     try:
-        print("-"*50)
-        line = input()
-        if line == "":
-            continue
-        end_to_end_infer(line, not pronounciation_dictionary)
-    except EOFError:
-        break
-    except KeyboardInterrupt:
-        print("Stopping...")
-        break
+        # ... Your synthesis code ...
+
+        app.logger.info('Synthesis completed successfully')
+        # Return the generated audio file to the client
+        return send_file(audio_path, as_attachment=True, download_name='generated_audio.wav')
+    except Exception as e:
+        app.logger.error(f'Synthesis failed: {str(e)}')
+        return jsonify({'error': 'Failed to synthesize.'}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=80)
