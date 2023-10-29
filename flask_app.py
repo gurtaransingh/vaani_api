@@ -210,25 +210,19 @@ superres_strength = 1 #@param {type:"number"}
 
 
 
-@app.route('/synthesize', methods=['POST'])
 
 
 @app.route('/synthesize', methods=['POST'])
 def synthesize():
     text = request.json.get('text', '')
     if not text:
-        app.logger.error('No text provided')
         return jsonify({'error': 'No text provided'}), 400
-
+    
     try:
-        # ... Your synthesis code ...
-
-        app.logger.info('Synthesis completed successfully')
+        audio_path = end_to_end_infer(text, not pronounciation_dictionary)
         # Return the generated audio file to the client
         return send_file(audio_path, as_attachment=True, download_name='generated_audio.wav')
     except Exception as e:
-        app.logger.error(f'Synthesis failed: {str(e)}')
-        return jsonify({'error': 'Failed to synthesize.'}), 500
-
+        return jsonify({'error': str(e)}), 500
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80)
